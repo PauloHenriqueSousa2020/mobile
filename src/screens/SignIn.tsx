@@ -1,5 +1,8 @@
 // libs
 import { useNavigation } from "@react-navigation/native";
+import { useForm, Controller } from "react-hook-form";
+import * as yup from 'yup';
+import { yupResolver } from "@hookform/resolvers/yup";
 
 // components
 import { Center, Image, VStack, Text, Heading, ScrollView } from "@gluestack-ui/themed";
@@ -11,12 +14,31 @@ import { AuthNavigatorRouterProps } from "routes/auth.routes";
 // assets
 import Logo from "assets/logo.svg"
 
+type FormDataProps = {
+  email: string;
+  password: string;
+}
+
+const signUpSchema = yup.object({
+  email: yup.string().required('Informe o e-mail.').email('E-mail inválido.'),
+  password: yup.string().required('Informe a senha.')
+})
 
 export function SignIn() {
+  const { control, handleSubmit, formState: {
+    errors
+  } } = useForm<FormDataProps>({
+    resolver: yupResolver(signUpSchema)
+  });
+
   const navigation = useNavigation<AuthNavigatorRouterProps>();
 
   function handleNewAccount() {
     navigation.navigate('signUp');
+  }
+
+  function handleSignUp(data: FormDataProps) {
+    console.log('data: ', data)
   }
 
   return (
@@ -43,17 +65,36 @@ export function SignIn() {
           <Center gap={'$2'}>
             <Heading color={'$gray100'}>Acessa a sua conta</Heading>
 
-            <Input
-              placeholder={'E-mail'}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <Input
-              placeholder={'Senha'}
-              secureTextEntry
+            <Controller
+              control={control}
+              name={'email'}
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  value={value}
+                  placeholder={'E-mail'}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  onChangeText={onChange}
+                  errorMessage={errors.email?.message}
+                />
+              )}
             />
 
-            <Button title={'Acessar'} />
+            <Controller
+              control={control}
+              name={'password'}
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  value={value}
+                  placeholder={'Senha'}
+                  secureTextEntry
+                  onChangeText={onChange}
+                  errorMessage={errors.password?.message}
+                />
+              )}
+            />
+
+            <Button title={'Acessar'} onPress={handleSubmit(handleSignUp)} />
           </Center>
 
           <Center flex={1} justifyContent="flex-end" mt={'$4'}>
