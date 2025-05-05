@@ -11,7 +11,8 @@ import { Button, Input, ScreenHeader, ToastMessage, UserPhoto } from "components
 export function Profile() {
   const [userPhoto, setUserPhoto] = useState('https://github.com/paulohenriquesousa2020.png');
 
-  const toast = useToast()
+  const toast = useToast();
+
   async function handleUserPhotoSelect() {
     try {
       const photoSelected = await ImagePicker.launchImageLibraryAsync({

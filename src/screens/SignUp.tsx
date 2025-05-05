@@ -1,15 +1,22 @@
 // libs
+import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useForm, Controller } from "react-hook-form";
 import * as yup from 'yup';
 import { yupResolver } from "@hookform/resolvers/yup";
 
 // components
-import { Center, Image, VStack, Text, Heading, ScrollView } from "@gluestack-ui/themed";
-import { Button, Input } from "components"
+import { Center, Image, VStack, Text, Heading, ScrollView, useToast } from "@gluestack-ui/themed";
+import { Button, Input, ToastMessage } from "components"
 
 // routes
 import { AuthNavigatorRouterProps } from "routes/auth.routes";
+
+// services
+import { api } from "services/api";
+
+// utils
+import { AppError } from "utils/AppError";
 
 // assets
 import Logo from "assets/logo.svg"
@@ -29,6 +36,9 @@ const signUpSchema = yup.object({
 })
 
 export function SignUp() {
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
+
   const { control, handleSubmit, formState: {
     errors
   } } = useForm<FormDataProps>({
@@ -41,8 +51,30 @@ export function SignUp() {
     navigation.navigate('signIn');
   }
 
-  function handleSignUp(data: FormDataProps) {
-    console.log('data: ', data)
+  async function handleSignUp({ name, email, password }: FormDataProps) {
+    setIsLoading(true);
+
+    try {
+      const response = await api.post('/users', { name, email, password });
+    } catch (error) {
+      const isAppError = error instanceof AppError;
+
+      const description = isAppError ? error.message : 'Não foi possível criar a conta. Tente novamente mais tarde'
+
+      toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+          <ToastMessage
+            id={id}
+            action={'error'}
+            title={'Erro ao criar a conta.'}
+            description={description}
+            onClose={() => toast.close(id)}
+          />
+        )
+      })
+    }
+    setIsLoading(false);
   }
 
   return (
@@ -127,7 +159,11 @@ export function SignUp() {
               )}
             />
 
-            <Button title={'Criar e acessar'} onPress={handleSubmit(handleSignUp)} />
+            <Button
+              title={'Criar e acessar'}
+              onPress={handleSubmit(handleSignUp)}
+              isLoading={isLoading}
+            />
           </Center>
 
           <Button title="Voltar para o login" variant={'outline'} mt={'$12'} onPress={handleGoBack} />
